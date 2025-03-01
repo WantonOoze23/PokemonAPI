@@ -36,7 +36,6 @@ import coil.compose.AsyncImage
 import com.tyshko.pokemonapi.model.Pokemon
 import com.tyshko.pokemonapi.view.PokeViewModel
 
-
 @Composable
 fun PokePage(viewModel: PokeViewModel) {
     val pokemonList by viewModel.pokemonList.observeAsState(emptyList())
@@ -116,6 +115,7 @@ fun PokePage(viewModel: PokeViewModel) {
 
 @Composable
 fun GeneratePokemonCard(data: Pokemon) {
+    val numberOfMoves = 2
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(8.dp)
@@ -126,7 +126,7 @@ fun GeneratePokemonCard(data: Pokemon) {
             contentDescription = data.name
         )
         Text(text = data.name)
-        data.moves.take(2).forEach { move ->
+        data.moves.take(numberOfMoves).forEach { move ->
             Text(text = move.move.name)
         }
     }
