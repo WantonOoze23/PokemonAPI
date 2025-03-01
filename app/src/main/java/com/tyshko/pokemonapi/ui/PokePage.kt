@@ -1,5 +1,6 @@
 package com.tyshko.pokemonapi.ui
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -30,7 +33,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
 import com.tyshko.pokemonapi.model.Pokemon
@@ -59,7 +64,7 @@ fun PokePage(viewModel: PokeViewModel) {
                 onClick = { expanded = !expanded },
                 modifier = Modifier.align(Alignment.TopEnd)
             ) {
-                Icon(Icons.Default.MoreVert, contentDescription = "More options")
+                Icon(Icons.Default.ArrowDropDown, contentDescription = "More options")
 
                 DropdownMenu(
                     expanded = expanded,
@@ -89,11 +94,11 @@ fun PokePage(viewModel: PokeViewModel) {
         }
 
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 120.dp),
-            contentPadding = PaddingValues(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.weight(1f)
+            columns = GridCells.Adaptive(minSize = 130.dp),
+            contentPadding = PaddingValues(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.weight(1f),
         ) {
             items(pokemonList.size) { index ->
                 GeneratePokemonCard(pokemonList[index])
@@ -118,16 +123,22 @@ fun GeneratePokemonCard(data: Pokemon) {
     val numberOfMoves = 2
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(8.dp)
+        modifier = Modifier.padding(8.dp).border(1.dp, color = Color.Black, shape = RoundedCornerShape(8.dp))
     ) {
         AsyncImage(
             modifier = Modifier.size(120.dp),
             model = data.sprites.front_default,
-            contentDescription = data.name
+            contentDescription = data.name,
         )
-        Text(text = data.name)
+        Text(
+            text = data.name,
+            fontSize = (15.sp),
+            fontWeight = FontWeight.Bold
+        )
         data.moves.take(numberOfMoves).forEach { move ->
-            Text(text = move.move.name)
+            Text(
+                text = move.move.name, fontSize = (13.sp)
+            )
         }
     }
 }
