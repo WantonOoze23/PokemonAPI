@@ -11,67 +11,87 @@ import kotlinx.coroutines.launch
 
 class PokeViewModel : ViewModel() {
     private val pokeApi = RetrofitInstance.pokeApi
-    private val _pokeResult = MutableLiveData<NetworkResponse<Pokemon>>()
+    private val _pokemonList = MutableLiveData<NetworkResponse<List<Pokemon>>>(NetworkResponse.Success(emptyList()))
+    val pokemonList: LiveData<NetworkResponse<List<Pokemon>>> = _pokemonList
 
-    private val _pokemonList = MutableLiveData<List<Pokemon>>(emptyList())
-    val pokemonList: LiveData<List<Pokemon>> = _pokemonList
+    fun loadPokemonList() {
+        val limitsOfPokemons: IntArray = intArrayOf(1, 1025)
+        val amountOfDisplayedPokemons = 15
 
-    fun loadPokemonList(){
         viewModelScope.launch {
-            _pokemonList.value = emptyList()
-
-            val randomIds = (1..1025).shuffled().take(15)
-
-            randomIds.forEach { id ->
-                getData(id.toString())
-            }
-        }
-    }
-
-    fun getData(id: String) {
-        viewModelScope.launch {
-            _pokeResult.value = NetworkResponse.Loading
+            _pokemonList.value = NetworkResponse.Loading
 
             try {
-                val response = pokeApi.getPokemon(id)
-                if (response.isSuccessful) {
-                    response.body()?.let { pokemon ->
-                        _pokeResult.value = NetworkResponse.Success(pokemon)
-                        val currentList = _pokemonList.value ?: emptyList()
-                        if (currentList.none { it.name == pokemon.name }) {
-                            _pokemonList.value = currentList + pokemon
+                val randomIds = (limitsOfPokemons[0]..limitsOfPokemons[1])
+                    .shuffled()
+                    .take(amountOfDisplayedPokemons)
+
+                val pokemonListResult = mutableListOf<Pokemon>()
+
+                randomIds.forEach { id ->
+                    val response = pokeApi.getPokemon(id.toString())
+                    if (response.isSuccessful) {
+                        response.body()?.let { pokemon ->
+                            if (pokemonListResult.none { it.name == pokemon.name }) {
+                                pokemonListResult.add(pokemon)
+                            }
                         }
                     }
-                } else {
-                    _pokeResult.value = NetworkResponse.Error("Failed to load Pokémon")
                 }
+
+                _pokemonList.value = NetworkResponse.Success(pokemonListResult)
+
             } catch (e: Exception) {
-                _pokeResult.value = NetworkResponse.Error("Failed to load Pokémon: ${e.message}")
+                _pokemonList.value = NetworkResponse.Error("Failed to load Pokémon list: \ncheck your internet connection")
             }
         }
     }
 
     fun sortByName() {
-        val currentList = _pokemonList.value ?: emptyList()
-        _pokemonList.value = currentList.sortedBy { it.name }
+        when (val current = _pokemonList.value) {
+            is NetworkResponse.Success -> {
+                _pokemonList.value = NetworkResponse.Success(
+                    current.data.sortedBy { it.name }
+                )
+            }
+            else -> {}
+        }
     }
 
     fun sortByMoves() {
-        val currentList = _pokemonList.value ?: emptyList()
-        _pokemonList.value = currentList.sortedBy {
-            minOf(it.moves[0].move.name, it.moves[1].move.name)
+        when (val current = _pokemonList.value) {
+            is NetworkResponse.Success -> {
+                _pokemonList.value = NetworkResponse.Success(
+                    current.data.sortedBy {
+                        minOf(it.moves[0].move.name, it.moves[1].move.name)
+                    }
+                )
+            }
+            else -> {}
         }
     }
 
     fun reverseSortByName() {
-        val currentList = _pokemonList.value ?: emptyList()
-        _pokemonList.value = currentList.sortedByDescending { it.name }
+        when (val current = _pokemonList.value) {
+            is NetworkResponse.Success -> {
+                _pokemonList.value = NetworkResponse.Success(
+                    current.data.sortedByDescending { it.name }
+                )
+            }
+            else -> {}
+        }
     }
 
     fun reverseSortByMoves() {
-        val currentList = _pokemonList.value ?: emptyList()
-        _pokemonList.value = currentList.sortedByDescending {
-            minOf(it.moves[0].move.name, it.moves[1].move.name)
+        when (val current = _pokemonList.value) {
+            is NetworkResponse.Success -> {
+                _pokemonList.value = NetworkResponse.Success(
+                    current.data.sortedByDescending {
+                        minOf(it.moves[0].move.name, it.moves[1].move.name)
+                    }
+                )
+            }
+            else -> {}
         }
     }
 }

@@ -5,17 +5,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -35,19 +38,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import coil.compose.AsyncImage
+import com.tyshko.pokemonapi.instances.NetworkResponse
 
 import com.tyshko.pokemonapi.model.Pokemon
 import com.tyshko.pokemonapi.view.PokeViewModel
 
 @Composable
 fun PokePage(viewModel: PokeViewModel) {
-    val pokemonList by viewModel.pokemonList.observeAsState(emptyList())
+    val pokemonList by viewModel.pokemonList.observeAsState()
+    var expanded by remember { mutableStateOf(false)}
 
     LaunchedEffect(Unit) {
         viewModel.loadPokemonList()
     }
-
-    var expanded by remember { mutableStateOf(false)}
 
     Column(
         modifier = Modifier
@@ -91,15 +94,53 @@ fun PokePage(viewModel: PokeViewModel) {
             }
         }
 
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = 130.dp),
-            contentPadding = PaddingValues(4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.weight(1f),
-        ) {
-            items(pokemonList.size) { index ->
-                GeneratePokemonCard(pokemonList[index])
+        when (val response = pokemonList) {
+            is NetworkResponse.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            is NetworkResponse.Success -> {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 130.dp),
+                    contentPadding = PaddingValues(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    items(response.data) { pokemon ->
+                        GeneratePokemonCard(pokemon)
+                    }
+                }
+            }
+            is NetworkResponse.Error -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = response.message,
+                        color = Color.Red,
+                        fontSize = 16.sp
+                    )
+                }
+            }
+            null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Initializing...")
+                }
             }
         }
 
